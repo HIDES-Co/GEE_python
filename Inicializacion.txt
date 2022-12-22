@@ -1,0 +1,36 @@
+Una buena practoca de programaicion es configurar el nombre de usuario y algunas 
+credenciales en la configuracion de git.
+	>> git --list # Configuracion por defecto de git
+	
+	>> git congfig --list --show-origin # para ver donde estan las configuraciones guardadas
+	
+	>> git config --global user.name "name"
+	>> git config --global user.email "email"
+	
+CONFIGURACION DE GIT CON GITHUB
+	1. crear el repo dentro de la organización
+	
+	2. Configuracion de las llaves SSH en local
+	
+		2.1 Situarse en el home 
+		2.2 Congigurar el email en global
+		2.3 ssh-keygen -t rsa -b 4096 -C "correo@gmail.com"
+			2.3.1 elegir una carpeta (windows darle enter)
+		2.4 crear una contraseña passphrase (contraseña adicional, se recomienda poner una)
+		2.5 agregar la llave al entorno
+			2.5.2 Revisar que el servidor de llaves este prendido : 
+				>> eval $(ssh-agent -s)
+			2.5.2 Agregar la llave:
+				>> ssh-add ~/.ssh/id_rsa # ir al fichero donde esta la llave y seleccionar la llave publica
+	3. Conexión SSH con github
+		3.1 ir al perfil de git > settings > SSH and GPG keys > create new ssh
+		3.2 se pone un titulo descriptivo del pc al que se va a conectar y se pone la llave ssh publica
+		    almacenada en local
+		    
+	4. Conexion con el repositorio
+		4.1 ir la carpeta del proyecto donde esta el repo local
+		4.2 git remote add origin "pegar la url del ssh del repo de github entre comillas"
+		4.3 git remote -v # verificar que la conexion se realizó
+		
+		
+
