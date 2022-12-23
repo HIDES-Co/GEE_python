@@ -1,0 +1,35 @@
+INTRODUCCION GOOGLE EARTH ENGINE
+
+1. REGISTRO
+	Registrarse con el correo en el siguiente link:
+	https://earthengine.google.com/new_signup/
+	
+2. INSTALAR PYTHON Y ANACONDA
+	
+3. PREPARAR EL ENTORNO DE DESARROLLO
+
+	2.1 Crear un entorno de desarrollo en anaconda:
+			Abrir anaconda Promnt
+			>>conda create -n "Environment name" python
+	2.2 Instalar los entornos de desarrollo necesarios:
+			>> conda activate "Environment name"
+			>> pip install jupyterlab
+			>> pip install notebook
+			
+			Verificar en anaconda la instalacion, si no se ha completado hacerlo manualmente desde anaconda navigator
+	2.3 Instalar las las librerias necesarias
+	
+		Para la GEE-api https://developers.google.com/earth-engine/guides/python_install
+		
+		>> pip install earthengine-api --upgrade
+		>>pip install geemap
+		
+		instalar Gcloud 
+			https://cloud.google.com/sdk/docs/install-sdk?hl=es-419
+	
+	2.4 Autentificacion
+	
+		>>import ee
+		>>ee.Authenticate()
+		>>ee.Initialize()
+		
