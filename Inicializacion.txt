@@ -16,7 +16,7 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 2. Configuracion de git con github para enlazar repositorios
 
 	2.1 Crear repositorios
-		2.1.1 Unirse al repositorio remoto de de la organización en Github: https://github.com/UN-Bogota/GEE_python
+		2.1.1 Unirse al repositorio remoto de de la organizacion en Github: https://github.com/UN-Bogota/GEE_python
 		2.1.2 Crear un repositorio local en el ordenador donde se va a almacenar el proyecto     # Carpeta
 	
 	2.2 Configuracion de las llaves publicas y privadas (protocolo SSH)
@@ -56,7 +56,7 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 			2.2.6.1 ir al repositorio remoto en Github > boton "<>Code" > SSH > copiar enlace
 			2.2.6.2 enlazar repositorio local con repositorio remoto: ir al gitbash > ir a la carpeta donde se creo el repositorio local
 				  en el paso 2.1.2 con el comando >> cd "ruta del repositorio"     # sin comillas
-				>> git remote set-url origin "url"     # sin comillas la url copiada en portapapeles
+				>> git remote add origin "url"     # sin comillas la url copiada en portapapeles
 			2.2.6.3 git remote -v # verificar que la conexion se realizó
 
 Listop C:
