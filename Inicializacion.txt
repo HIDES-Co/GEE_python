@@ -56,7 +56,7 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 			2.2.6.1 ir al repositorio remoto en Github > boton "<>Code" > SSH > copiar enlace
 			2.2.6.2 enlazar repositorio local con repositorio remoto: ir al gitbash > ir a la carpeta donde se creo el repositorio local
 				  en el paso 2.1.2 con el comando >> cd "ruta del repositorio"     # sin comillas
-				>> git remote add origin "url"     # sin comillas la url copiada en portapapeles
+				>> git remote add origin <<url>>>     # La url es la que se copio en la pagina de github
 			2.2.6.3 git remote -v # verificar que la conexion se realizó
 
 Listop C:
