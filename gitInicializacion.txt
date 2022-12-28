@@ -17,7 +17,7 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 
 	2.1 Crear repositorios
 		2.1.1 Unirse al repositorio remoto de de la organizacion en Github: https://github.com/UN-Bogota/GEE_python
-		2.1.2 Crear un repositorio local en el ordenador donde se va a almacenar el proyecto     # Carpeta
+		2.1.2 Crear un repositorio local en el ordenador donde se va a almacenar el proyecto.     # Carpeta
 	
 	2.2 Configuracion de las llaves publicas y privadas (protocolo SSH)
 	
@@ -39,7 +39,8 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 			2.2.4.1 ir a la carpeta donde se guardo la llave (home si se siguieron las instrucciones del 
 					paso 2.2.3.1 y abrir el archivo "id_rsa.pub" (abrir con un programa lector de 
 					texto) y copiar todo el contenido. NOTA: En mac hay que hacer un paso adicional que 
-					y es agregar la llave publica al entorno local para que el sistema la detecte (en Windows y Linux se hace automatico)
+					y es agregar la llave publica al entorno local para que el sistema la detecte (en Windows y Linux se hace 			 
+					automatico)
 			2.2.4.2 Revisar que el servidor de llaves este prendido
 				>> eval $(ssh-agent -s)
 			2.2.4.3 Agregar la llave al sistema
@@ -56,8 +57,8 @@ Una buena practica de programaicion es configurar el nombre de usuario y algunas
 			2.2.6.1 ir al repositorio remoto en Github > boton "<>Code" > SSH > copiar enlace
 			2.2.6.2 enlazar repositorio local con repositorio remoto: ir al gitbash > ir a la carpeta donde se creo el repositorio local
 				  en el paso 2.1.2 con el comando >> cd "ruta del repositorio"     # sin comillas
-				>> git remote add origin <<url>>>     # La url es la que se copio en la pagina de github
-			2.2.6.3 git remote -v # verificar que la conexion se realizó
+				>> git remote add origin <<url>>>    # La url es la que se copio en la pagina de github
+			2.2.6.3 git remote -v # verificar que la conexion se realizó.
 
 Listop C:
 		
