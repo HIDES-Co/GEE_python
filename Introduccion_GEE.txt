@@ -19,17 +19,33 @@ INTRODUCCION GOOGLE EARTH ENGINE
 			Verificar en anaconda la instalacion, si no se ha completado hacerlo manualmente desde anaconda navigator
 	2.3 Instalar las las librerias necesarias
 	
-		Para la GEE-api https://developers.google.com/earth-engine/guides/python_install
+		Para la GEE-api la documentacion es: https://developers.google.com/earth-engine/guides/python_install
+		
+		Pasos:
 		
 		>> pip install earthengine-api --upgrade
-		>>pip install geemap
+		>> pip install geemap
 		
 		instalar Gcloud 
 			https://cloud.google.com/sdk/docs/install-sdk?hl=es-419
+			
+			Linux:
+			>> sudo apt-get install apt-transport-https ca-certificates gnupg
+			>> echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo 			tee -a /etc/apt/sources.list.d/google-cloud-sdk.list	
+			>> curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+			>> sudo apt-get update
+			>> sudo apt-get install google-cloud-cli
+			>> gcloud init # Verificar que las credenciales esten correctas
+			
+			
+				
 	
 	2.4 Autentificacion
 	
+	en la terminal: 
+	>> python 
 		>>import ee
-		>>ee.Authenticate()
+		>>ee.Authenticate() # iniciar sesion en la pagina que reedirige
 		>>ee.Initialize()
+		
 		
