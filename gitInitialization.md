@@ -95,7 +95,7 @@ and you should get : `/home/User/Documents/New_Directory`if it doesn't appear go
 
 `$ git remote -v`
 
-You shoyld get:
+You should get:
 
 `>> origin	git@github.com:UN-Bogota/GEE_python.git (fetch)`
 `>> origin	git@github.com:UN-Bogota/GEE_python.git (push)`
