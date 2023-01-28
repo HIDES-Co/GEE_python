@@ -1,0 +1,12 @@
+*.jpg
+*.ipynb_checkpoints
+*.zip
+*.cpg
+*.dbf
+*.prj
+*.sbn
+*.sbx
+*.shp
+*.xml
+*.shx
+
