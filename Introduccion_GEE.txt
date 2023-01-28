@@ -16,7 +16,10 @@ INTRODUCCION GOOGLE EARTH ENGINE
 			>> pip install jupyterlab
 			>> pip install notebook
 			
-			Verificar en anaconda la instalacion, si no se ha completado hacerlo manualmente desde anaconda navigator
+			2.2.1 Abrir App Anaconda (linux: ´$ anaconda-navigator´), situarse en el nuevo entorno de desarrollo (base(root) -> "Environment name") 
+			para verificar la instalación de los programas, si no se ha completado hacerlo manualmente desde anaconda navigator
+			Oprimiendo install en los programas que se necesitan en este caso JuputerLab y JupyterNotebook 
+			
 	2.3 Instalar las las librerias necesarias
 	
 		Para la GEE-api la documentacion es: https://developers.google.com/earth-engine/guides/python_install
@@ -25,8 +28,9 @@ INTRODUCCION GOOGLE EARTH ENGINE
 		
 		>> pip install earthengine-api --upgrade
 		>> pip install geemap
+		>> pip install chardet
 		
-		instalar Gcloud 
+		instalar Gcloud en la siguiente documentación se encuentra el procedimiento para windows:
 			https://cloud.google.com/sdk/docs/install-sdk?hl=es-419
 			
 			Linux:
@@ -35,7 +39,7 @@ INTRODUCCION GOOGLE EARTH ENGINE
 			>> curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 			>> sudo apt-get update
 			>> sudo apt-get install google-cloud-cli
-			>> gcloud init # Verificar que las credenciales esten correctas
+			>> gcloud init # Verificar que las credenciales esten correctas y cerrar terminal
 			
 			
 				
