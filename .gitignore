@@ -1,6 +1,7 @@
 *.jpg
 *.ipynb_checkpoints
 *.zip
+*.pdf
 *.cpg
 *.dbf
 *.prj
@@ -9,4 +10,3 @@
 *.shp
 *.xml
 *.shx
-
