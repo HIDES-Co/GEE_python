@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 21 10:02:26 2023
+
+@author: bojack
+"""
+
+from satelite import colSatellite
+from satelite import csv_from_sat
+from satelite import statAnalisisData
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+import gstools as gs
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import ee
+import folium
+import urllib.request
+from io import BytesIO
+from PIL import Image
+
+ee.Initialize(
+    opt_url='https://earthengine-highvolume.googleapis.com'
+    )
+
+
+satelliteName = 'COPERNICUS/S5P/OFFL/L3_CH4'
+layer = 'CH4_column_volume_mixing_ratio_dry_air_bias_corrected'
+initDate = '2018-05-31'
+finalDate = '2023-08-10'
+
+methaneSat = colSatellite(satelliteName, layer) # crea el objeto
+methaneImageCollection = methaneSat.getImageCollection(initDate, finalDate) # obtiene datos para las fechas especificadas
+fronterasMaritimasCol = methaneSat.getROI('fronterasMaritimasCol') # selecciona la region que ya trae el objeto
+methaneImageClip = methaneSat.clipImage(methaneImageCollection, fronterasMaritimasCol) # Recorta la imagen a una región
+
+# Plotting the image prom
+
+viz_params = {
+    'min': 1600,
+    'max': 2000,
+    'dimensions': '500x600',
+    'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
+}
+
+thumbnail_url = methaneImageClip.getThumbURL(viz_params)
+
+print(thumbnail_url)
+input()
+with urllib.request.urlopen(thumbnail_url) as url:
+    img = Image.open(url)
+    img.show()
+    
+input('-----')
+# Create a folium map centered on the region of interest
+map_center = [4.6,-74]
+
+
+# Fetch the image data using urllib
+response = urllib.request.urlopen(thumbnail_url)
+image_data = response.read()
+
+# Convert the image data to a Pillow Image object
+pil_image = Image.open(BytesIO(image_data))
+
+
+# Convert the Pillow Image to a NumPy array and display using matplotlib
+plt.imshow(np.array(pil_image))
+plt.title('Promedio Metano')
+plt.axis('off')
+
+departamentos = ee.FeatureCollection('users/hmojica/data/departamentos')
+style = {
+    'color': '000000',
+    'lineType': 'solid',# Line type (solid)
+    'fillColor': '00000000'  # Fill color (transparent)
+}
+
+# Plot the geometries with specified style
+for feature in departamentos.getInfo()['features']:
+    geometry = feature['geometry']['coordinates']
+    for coords in geometry:
+        x, y = zip(*coords)
+        plt.plot(x, y, **style)
+
+plt.show()

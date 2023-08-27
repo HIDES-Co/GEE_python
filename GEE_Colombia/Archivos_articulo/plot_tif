@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 22 09:17:51 2023
+
+@author: bojack
+"""
+
+import rasterio
+from rasterio.plot import show
+import matplotlib.pyplot as plt
+
+# Abrir el archivo .tif
+with rasterio.open('metano promediado.tif') as src:
+    # Mostrar la imagen
+    fig, ax = plt.subplots()
+    show(src, ax=ax)
+    plt.show()

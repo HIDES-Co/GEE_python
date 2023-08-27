@@ -1,0 +1,2 @@
+/home/bojack/anaconda3/envs/HIDES_GEE/lib/python3.11/site-packages/gstools/covmodel/tools.py:553: AttributeWarning: Dimension 3 is not appropriate for this model.
+  warnings.warn(

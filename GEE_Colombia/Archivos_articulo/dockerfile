@@ -1,0 +1,37 @@
+# Use an official Python runtime as a parent image
+FROM python:latest
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+#COPY requirements.txt ./
+#COPY script.py ./
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# Descargando el paquete gcloud
+RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+
+# Instalando el paquete
+RUN mkdir -p /usr/local/gcloud \
+  && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+  && /usr/local/gcloud/google-cloud-sdk/install.sh
+
+# Agregando la ruta del paquete a la variable de entorno local
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+
+
+RUN pip install earthengine-api --upgrade
+RUN mkdir -p /root/.config/earthengine
+ADD /.config/credentials /root/.config/earthengine
+#ADD /.config/credentials /home/.config/earthengine/credentials
+#/root/.config/earthengine/credentials
+# Make port 80 available to the world outside this container
+#EXPOSE 80
+
+# Define environment variable
+#ENV NAME World
+
+# Run app.py when the container launches
+CMD ["python", "llenadoCol.py"]

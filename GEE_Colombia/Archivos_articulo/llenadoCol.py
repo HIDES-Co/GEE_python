@@ -9,33 +9,22 @@ from satelite import colSatellite
 from satelite import csv_from_sat
 from satelite import statAnalisisData
 
-while True:
-    try:
-        import sys
-        import subprocess
-        from google.colab import drive
-        import io
-        from contextlib import redirect_stdout
-        from pydrive.auth import GoogleAuth
-        from pydrive.drive import GoogleDrive
-        import os
-        import geopandas as gpd
-        import pandas as pd
-        import numpy as np
-        import gstools as gs
-        import matplotlib.pyplot as plt
-        import ee
-        import requests
-        from shapely.geometry import Polygon
-        from shapely.geometry import Point
-        from shapely.geometry import shape
-        break
-    
-    except ModuleNotFoundError as e:
-        try: 
-            subprocess.run([sys.executable, "-m", "pip", "install", e.name])
-        except:
-            raise Exception(f"Sorry, the library {e.name} could not be installed")
+
+import sys
+import subprocess
+import io
+from contextlib import redirect_stdout
+import os
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+import gstools as gs
+import matplotlib.pyplot as plt
+import ee
+import requests
+from shapely.geometry import Polygon
+from shapely.geometry import Point
+from shapely.geometry import shape
 
 
 #ee.Authenticate()
@@ -69,7 +58,6 @@ methaneSat.addRegion('Zonas de similar comportamiento Colombia', 'RegionesCol', 
 RegionesCol = RegionesCol.geometry() # de featureCollection a geometry
 coordinates = RegionesCol.coordinates() # Obtiene las coordenadas del geometry
 coordinates = coordinates.getInfo() 
-
 """
 El objeto geometries a continuación tendrá las zonas de colombia individualizadas ya que el featureCollection 
 que se importa viene con tollas ellas en conjunto.
@@ -127,13 +115,10 @@ statAnalisis = statAnalisisData(r)
 scores = statAnalisis.getVariogramScores(x, y, field)
 #----
 
-
-##### ¡¡¡¡REVISADO!!!! ###########
 #--------
 
 
 model_k = statAnalisis.getBestVariogram()
-
 #----
 
 # Parecen haber dos tipos de modelos en el semivariograma por lo que se evalúa la suposición de isotropía
@@ -180,7 +165,6 @@ ax1.set_title("Modelo anisotrópico Mar adentro")
 #srf.plot(ax=ax2)
 plt.show()
 
-input('done')
 #---
 
 fc=geometries[g]
@@ -213,8 +197,8 @@ for i in range(len(cor)):
 # ymin = np.amin(cor,axis=1)
 
 print(xmax,ymax,xmin,ymin)
-gridx = np.arange(xmin,xmax, 0.04)
-gridy = np.arange(ymin, ymax, 0.04)
+gridx = np.arange(xmin,xmax, 0.01)
+gridy = np.arange(ymin, ymax, 0.01)
 
 # model = gs.Integral(
 #     dim=2, len_scale=1, anis=0.2, angles=-0.5, var=0.5, nugget=0.1
@@ -229,18 +213,15 @@ cond_y=yr#[ind]#r[:,0]
 cond_val=fieldr#[ind]#r[:,2]
 OK2 = gs.krige.Ordinary(model_k, [cond_x, cond_y], cond_val, exact=True)
 OK2.structured([gridx, gridy])
-#ax = OK2.plot()
+ax = OK2.plot()
 
-input('llego al krige-------------------------------------')
 
-"""
 #------
 xx, yy = np.meshgrid(gridy, gridx)
 z=OK2.field.copy()
 w=OK2.krige_var.copy()
 #z=z.reshape(len(gridy),len(gridx))
 data = np.array([xx, yy, z, w]).reshape(4, -1).T
-np.shape(data)
 
 
 plt.figure(1)
@@ -274,8 +255,10 @@ poly1 = geometries[g] # verificar y si no sirve borrar
 
 poly1 = Polygon( cor )
 myPoly = gpd.GeoSeries([poly1])
+
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+
 ind=[]
 for i in range(np.shape(xx)[0]):
   for j in range(np.shape(xx)[1]):
@@ -287,8 +270,6 @@ for i in range(np.shape(xx)[0]):
 
 poly1 = Polygon( cor_col )
 myPoly = gpd.GeoSeries([poly1])
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 ind=[]
 for i in range(np.shape(xx)[0]):
   for j in range(np.shape(xx)[1]):
@@ -298,8 +279,10 @@ for i in range(np.shape(xx)[0]):
       w[i,j]=np.nan
     #else:
 
+data = np.array([xx, yy, z, w]).reshape(4, -1).T
 df=pd.DataFrame(data,columns=['lon','lat','value','var'])
-
+df = df[df['value'].notna()]
+df.to_csv('prueba_medallo.csv', sep=',', encoding='utf-8', index=False)
 #---
 
 plt.figure(1)
@@ -311,7 +294,9 @@ fig.colorbar(CS1)
 ax1.set_title('Varianza en zona antioqueña')
 ax1.set_xlabel('Longitud')
 ax1.set_ylabel('Latitud')
+plt.savefig('varianza'+'.png', dpi=600)
 plt.show()
+
 plt.figure(2)
 
 #myPoly.boundary.plot(edgecolor='red')
@@ -321,8 +306,7 @@ ax2.set_title('Valor en zona antioqueña')
 ax2.set_xlabel('Longitud')
 ax2.set_ylabel('Latitud')
 fig1.colorbar(CS)
+plt.savefig('valor'+'.png', dpi=600)
 plt.show()
 
 #---
-input()
-"""

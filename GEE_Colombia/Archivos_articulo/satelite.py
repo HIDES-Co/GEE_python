@@ -35,14 +35,11 @@ class satellite(ABC):
     
     @abstractmethod
     def getAviableRegions(self):
-        
         pass
-        
+    
+    @abstractmethod
     def getROI(self, identifier):
-        
-        for i in range(len(self.regions)):
-            if self.regions[i]['id'] == identifier:
-                return self.regions[i]['object'] 
+        pass
     
     def addRegion(self, tittle, identificator, regionObject):
         
@@ -56,7 +53,7 @@ class satellite(ABC):
     def clipImage(self, imageCollection, shape):
         
         meanImage = imageCollection.mean()
-        meanImageClip = meanImage.clip(shape)
+        meanImageClip = meanImage.clip(shape.geometry())
         return meanImageClip
     
     
@@ -76,6 +73,7 @@ class colSatellite(satellite):
         
         for j in self.localRegions:
             self.regions.append(j)
+        print('plotting aviable regions... \n')
         for i in range(len(self.regions)):
             print('---------- Region '+ str(i+1) + ' -----------')
             print('title: ' + self.regions[i]['title'])
@@ -83,7 +81,19 @@ class colSatellite(satellite):
             print('type: ', self.regions[i]['type'])
             print('--------------------------------')
             
+    def getROI(self, identifier):
+        self.getAviableRegions()
+        for i in range(len(self.regions)):
+            if self.regions[i]['id'] == identifier:
+                print('selectting ' + identifier + 'region')
+                ROI = self.regions[i]['object'] 
+        if ROI:
+            return ROI
+        else: 
+            print('no canciona')
             
+    def get_clusters_data(self):
+        pass
             
 class csv_from_sat(object):
     
@@ -148,7 +158,7 @@ class statAnalisisData(csv_from_sat):
         self.x = None
         self.y = None
         self.field = None
-        
+            
     def getVariogramScores(self, x, y, field, graph=False):
         
         self.x = x
