@@ -7,15 +7,13 @@ mediante el uso de su api en python. También se espera reforzar el trabajo en e
 
 ### 1. Configuracion de la tecnologia de git y su sincronozación con GitHub
 
-Con el fin de capacitar a las personas del equipo en el uso de las TIC se desarrolló una guía encontrada en el directorio principal del repositorio 
-llamada 'gitinitiazitation.md' o "https://github.com/HIDES-Co/GEE_python/blob/main/gitInitialization.md". 
+Con el fin de capacitar a las personas del equipo en el uso de las TIC se desarrolló una guía encontrada en el directorio principal del repositorio llamada [gitinitiazitation.md](https://github.com/HIDES-Co/GEE_python/blob/main/gitInitialization.md).
 
 Si usted está empezando desde cero deberá seguir primero las instrucciones descritas en el documento mencionado.
 
 ### 2. Configuración de las librerias y la api de GEE
 
-Antes de empezar a ejecurtar o escribir los scripts es necesario instalar ciertas dependencias y configurar el entorno de desarrolo, Para ello es 
-necesario remitirse al documento "Introduccion_GEE.txt" en el directorio principal del repositorio o en "https://github.com/HIDES-Co/GEE_python/blob/main/Introduccion_GEE.txt". 
+Antes de empezar a ejecutar o escribir los scripts es necesario instalar ciertas dependencias y configurar el entorno de desarrolo, Para ello es necesario remitirse al documento [Introduccion_GEE.txt](https://github.com/HIDES-Co/GEE_python/blob/main/Introduccion_GEE.txt").
 
 Una vez hechas estas configuraciones usted esta listo para trabajar en este repositorio de aprendizaje. 
 
