@@ -21,68 +21,108 @@ import urllib.request
 from io import BytesIO
 from PIL import Image
 
-ee.Initialize(
-    opt_url='https://earthengine-highvolume.googleapis.com'
-    )
+from google.oauth2.service_account import Credentials
 
+
+ee.Initialize(
+  project='ee-hides',
+  opt_url='https://earthengine-highvolume.googleapis.com'
+)
 
 satelliteName = 'COPERNICUS/S5P/OFFL/L3_CH4'
 layer = 'CH4_column_volume_mixing_ratio_dry_air_bias_corrected'
 initDate = '2018-05-31'
-finalDate = '2023-08-10'
+finalDate = '2023-08-25'
 
 methaneSat = colSatellite(satelliteName, layer) # crea el objeto
 methaneImageCollection = methaneSat.getImageCollection(initDate, finalDate) # obtiene datos para las fechas especificadas
 fronterasMaritimasCol = methaneSat.getROI('fronterasMaritimasCol') # selecciona la region que ya trae el objeto
 methaneImageClip = methaneSat.clipImage(methaneImageCollection, fronterasMaritimasCol) # Recorta la imagen a una región
-
+methaneImageClip = ee.ImageCollection.fromImages([methaneImageClip])
 # Plotting the image prom
 
 viz_params = {
     'min': 1600,
     'max': 2000,
-    'dimensions': '500x600',
+    'dimensions': '100x200',
     'palette': ['black', 'blue', 'purple', 'cyan', 'green', 'yellow', 'red']
 }
 
-thumbnail_url = methaneImageClip.getThumbURL(viz_params)
 
-print(thumbnail_url)
+def containsNulls(image):
+    mask = image.mask()
+    return mask.reduceRegion(
+        reducer=ee.Reducer.anyNonZero(),
+        geometry=image.geometry(),
+        scale=4000,
+        maxPixels=1e11
+    ).values().get(0)
+
+# Filter out images that contain null values
+filteredCollection = methaneImageClip.filter(ee.Filter.notEquals(containsNulls, True))
+data=methaneImageClip.getRegion(fronterasMaritimasCol,4000)
+
+data_array=np.array(data.getInfo())
+df=pd.DataFrame(data_array[1:,:],columns=data_array[0,:])
+df[df.CH4_column_volume_mixing_ratio_dry_air_bias_corrected.notnull()]
+print(df.head(5))
 input()
-with urllib.request.urlopen(thumbnail_url) as url:
-    img = Image.open(url)
-    img.show()
-    
-input('-----')
-# Create a folium map centered on the region of interest
-map_center = [4.6,-74]
-
-
+thumbnail_url = methaneImageClip.getThumbURL(viz_params)
 # Fetch the image data using urllib
 response = urllib.request.urlopen(thumbnail_url)
 image_data = response.read()
-
 # Convert the image data to a Pillow Image object
 pil_image = Image.open(BytesIO(image_data))
-
-
 # Convert the Pillow Image to a NumPy array and display using matplotlib
-plt.imshow(np.array(pil_image))
+image = plt.imshow(np.array(pil_image))
 plt.title('Promedio Metano')
-plt.axis('off')
+plt.axis()
+plt.colorbar(image)
 
 departamentos = ee.FeatureCollection('users/hmojica/data/departamentos')
+
 style = {
     'color': '000000',
-    'lineType': 'solid',# Line type (solid)
-    'fillColor': '00000000'  # Fill color (transparent)
+    'linestyle': 'solid'# Line type (solid)
 }
-
 # Plot the geometries with specified style
 for feature in departamentos.getInfo()['features']:
-    geometry = feature['geometry']['coordinates']
+    
+    try:
+        geometry = feature['geometry']['coordinates']
+        
+    except:
+        for geometries in feature['geometry']['geometries']:
+            if geometries['type'] =='Polygon':
+                geometry = geometries['coordinates']
+                
+                for coords in geometry:
+                    try:
+                        x, y = zip(*coords)
+                        
+                        plt.plot(x, y, **style)
+                    except:
+                        for coords_i in coords:
+                            try:
+                                x, y = zip(*coords_i)
+                                plt.plot(x, y, **style)
+                            except:
+                                for coods_j in coords_i:
+                                    x, y = zip(*coods_j)
+                                    plt.plot(x, y, **style)
+                                    
     for coords in geometry:
-        x, y = zip(*coords)
-        plt.plot(x, y, **style)
+        try:
+            x, y = zip(*coords)
+            plt.plot(x, y, **style)
+        except:
+            for coords_i in coords:
+                try:
+                    x, y = zip(*coords_i)
+                    plt.plot(x, y, **style)
+                except:
+                    for coods_j in coords_i:
+                        x, y = zip(*coods_j)
+                        plt.plot(x, y, **style)
 
 plt.show()

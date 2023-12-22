@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep  3 21:18:43 2023
+
+@author: juda
+"""
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+
+xx = df['longitude'].values
+yy = df['latitude'].values
+zz = df['CH4_column_volume_mixing_ratio_dry_air_bias_corrected'].values
+length = int(len(xx)/4)
+X, Y = np.meshgrid(xx[0:length], yy[0:length])
+def Z(x, y):
+    sub_df = df.loc[df['longitude'] == x]
+    if not sub_df.empty:
+        sub_sub_df = sub_df.loc[sub_df['longitude'] == y]
+        if not sub_sub_df.empty:
+            return sub_sub_df['CH4_column_volume_mixing_ratio_dry_air_bias_corrected'][0]
+        else:
+            return 0
+    else:
+        return 0
+    
+z = np.zeros((length, length)) 
+for i in xx:
+  for j yy:
+      control = Z(xx[i], yy[j])
+      if control:
+          z[i,j] = control
+          break
+      
+
+fig1, ax2 = plt.subplots(layout='constrained')
+CS=ax2.contourf(X, Y, Z,100)
+plt.colorbar(CS)
+ax2.set_title('Valor')
+ax2.set_xlabel('Longitud')
+ax2.set_ylabel('Latitud')
+plt.show()
+
+

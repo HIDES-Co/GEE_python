@@ -18,79 +18,138 @@ import matplotlib.pyplot as plt
 ee.Initialize()
 #------------
 
-class satellite(ABC):
+class Satellite(ABC):
+    """
+    Abstract base class for a satellite.
+    """
     
-    
-    def __init__(self, satName, layer):
+    def __init__(self, sat_name, layer):
+        """
+        Initialize the Satellite object.
         
-        self.satellite = satName
+        Args:
+            sat_name (str): The name of the satellite.
+            layer (str): The layer of the satellite.
+        """
+        self.satellite = sat_name
         self.layer = layer
         self.regions = []
     
-    def getImageCollection(self, initDate, finalDate):
+    def get_image_collection(self, init_date, final_date):
+        """
+        Get the image collection for the given date range.
         
-        imageCollection = ee.ImageCollection(self.satellite).select(self.layer)
-        imageCollection = imageCollection.filterDate(initDate, finalDate)
-        return imageCollection
+        Args:
+            init_date (str): The initial date.
+            final_date (str): The final date.
+            
+        Returns:
+            ee.ImageCollection: The image collection for the given date range.
+        """
+        image_collection = ee.ImageCollection(self.satellite).select(self.layer)
+        image_collection = image_collection.filterDate(init_date, final_date)
+        return image_collection
     
     @abstractmethod
-    def getAviableRegions(self):
+    def get_available_regions(self):
+        """
+        Abstract method to get available regions.
+        """
         pass
     
     @abstractmethod
-    def getROI(self, identifier):
+    def get_roi(self, identifier):
+        """
+        Abstract method to get region of interest.
+        
+        Args:
+            identifier (str): The identifier of the region.
+        """
         pass
     
-    def addRegion(self, tittle, identificator, regionObject):
+    def add_region(self, title, identifier, region_object):
+        """
+        Add a region to the regions list.
         
-        region = {'title': tittle,
-                    'id': identificator,
-                    'type': ee.Algorithms.ObjectType(regionObject),
-                    'object': regionObject
+        Args:
+            title (str): The title of the region.
+            identifier (str): The identifier of the region.
+            region_object (ee.Geometry): The region object.
+        """
+        region = {
+            'title': title,
+            'id': identifier,
+            'type': ee.Algorithms.ObjectType(region_object),
+            'object': region_object
         }
         self.regions.append(region)
 
-    def clipImage(self, imageCollection, shape):
+    def clip_image(self, image_collection, shape):
+        """
+        Clip the image collection with the given shape.
         
-        meanImage = imageCollection.mean()
-        meanImageClip = meanImage.clip(shape.geometry())
-        return meanImageClip
-    
-    
-class colSatellite(satellite):
-    
-    
-    fronterasMaritimasCol = ee.FeatureCollection('projects/ee-jolejua/assets/EEZ_land_union_v3_202003')
-    fronterasMaritimasCol = fronterasMaritimasCol.filter(ee.Filter.eq('UNION', 'Colombia'))
-    fronterasMaritimasCol = {'title': 'Colombia con sus fronteras maritimas',
-                'id': 'fronterasMaritimasCol',
-                'type': type(fronterasMaritimasCol),
-                'object': fronterasMaritimasCol
-    }
-    localRegions = [fronterasMaritimasCol]
-    
-    def getAviableRegions(self):
-        
-        for j in self.localRegions:
-            self.regions.append(j)
-        print('plotting aviable regions... \n')
-        for i in range(len(self.regions)):
-            print('---------- Region '+ str(i+1) + ' -----------')
-            print('title: ' + self.regions[i]['title'])
-            print('id: ' + self.regions[i]['id'])
-            print('type: ', self.regions[i]['type'])
-            print('--------------------------------')
+        Args:
+            image_collection (ee.ImageCollection): The image collection.
+            shape (ee.Geometry): The shape to clip the image collection.
             
-    def getROI(self, identifier):
-        self.getAviableRegions()
-        for i in range(len(self.regions)):
-            if self.regions[i]['id'] == identifier:
-                print('selectting ' + identifier + 'region')
-                ROI = self.regions[i]['object'] 
-        if ROI:
-            return ROI
+        Returns:
+            ee.Image: The clipped image.
+        """
+        mean_image = image_collection.mean()
+        mean_image_clip = mean_image.clip(shape.geometry())
+        return mean_image_clip
+    
+    
+class ColSatellite(Satellite):
+    """
+    Class for a Colombian satellite that inherits from the Satellite class.
+    """
+    
+    fronteras_maritimas_col = ee.FeatureCollection('projects/ee-jolejua/assets/EEZ_land_union_v3_202003')
+    fronteras_maritimas_col = fronteras_maritimas_col.filter(ee.Filter.eq('UNION', 'Colombia'))
+    fronteras_maritimas_col = {
+        'title': 'Colombia con sus fronteras maritimas',
+        'id': 'fronterasMaritimasCol',
+        'type': type(fronteras_maritimas_col),
+        'object': fronteras_maritimas_col
+    }
+    local_regions = [fronteras_maritimas_col]
+    
+    def get_available_regions(self):
+        """
+        Get available regions and print them.
+        """
+        for region in self.local_regions:
+            self.regions.append(region)
+        print('Plotting available regions... \n')
+        for i, region in enumerate(self.regions, 1):
+            print(f'---------- Region {i} -----------')
+            print('title: ' + region['title'])
+            print('id: ' + region['id'])
+            print('type: ', region['type'])
+            print('--------------------------------')
+        print('Done...')  
+    
+    def get_roi(self, identifier):
+        """
+        Get region of interest (ROI) by identifier.
+        
+        Args:
+            identifier (str): The identifier of the region.
+            
+        Returns:
+            ee.Geometry: The region of interest.
+        """
+        
+        roi = None
+        for region in self.regions:
+            if region['id'] == identifier:
+                print('Selecting ' + identifier + ' region')
+                roi = region['object'] 
+        if roi:
+            return roi
         else: 
-            print('no canciona')
+            print('No funciona')
             
     def get_clusters_data(self):
         pass
@@ -208,5 +267,6 @@ class statAnalisisData(csv_from_sat):
         ax = fit_model.plot(x_max=max(bin_center))
         ax.scatter(bin_center,gamma, color="k", label="data")
         model_k = fit_model
+        plt.show()
         
         return model_k
