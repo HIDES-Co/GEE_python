@@ -12,6 +12,9 @@ from shapely.geometry import shape
 import numpy as np
 import gstools as gs
 import matplotlib.pyplot as plt
+from math import ceil
+from numpy.ma.core import sqrt
+
 #------------
 
 #ee.Authenticate()
@@ -99,6 +102,31 @@ class Satellite(ABC):
         mean_image_clip = mean_image.clip(shape.geometry())
         return mean_image_clip
     
+    def get_region_limits(self, specificRegionPoly):
+        
+        cor=specificRegionPoly.getInfo()['coordinates'][0]
+
+        xmax=cor[0][1]
+        ymax=cor[0][0]
+        xmin=cor[0][1]
+        ymin=cor[0][0]
+
+
+        for i in range(len(cor)):
+          xc=cor[i][1]
+          yc=cor[i][0]
+          if xc>xmax:
+            xmax=xc
+          if yc>ymax:
+            ymax=yc
+          if xc<xmin:
+            xmin=xc
+          if yc<ymin:
+            ymin=yc
+    
+        return xmax, ymax, xmin, ymin
+    
+    
     
 class ColSatellite(Satellite):
     """
@@ -114,6 +142,9 @@ class ColSatellite(Satellite):
         'object': fronteras_maritimas_col
     }
     local_regions = [fronteras_maritimas_col]
+    
+    def __init__(self, sat_name, layer):
+        csv_from_sat.__init__(self, sat_name, layer)
     
     def get_available_regions(self):
         """
@@ -160,7 +191,11 @@ class csv_from_sat(object):
     def __init__(self, satData):
         
         self.satData = satData
+        self.xr = None
+        self.yr = None
+        self.fieldr = None
         
+    
     def getVal_in_sahpe(self, shapefile):
         """
         Funcion que obtiene los valores que estan contenidos en 
@@ -190,7 +225,14 @@ class csv_from_sat(object):
               fieldr.append(self.satData[i,2])
               xr.append(self.satData[i,1])
               yr.append(self.satData[i,0])
-              
+        xr = np.array(xr)
+        yr = np.array(yr)
+        fieldr = np.array(fieldr)
+        
+        self.xr = xr
+        self.yr = yr
+        self.fieldr = fieldr
+        
         return xr, yr, fieldr
     
 
@@ -211,6 +253,7 @@ class statAnalisisData(csv_from_sat):
         "SuperSpherical": gs.SuperSpherical,
         "JBessel": gs.JBessel,
     }
+    
     def __init__(self, satData):
         csv_from_sat.__init__(self, satData)
         self.scores = None
@@ -270,3 +313,100 @@ class statAnalisisData(csv_from_sat):
         plt.show()
         
         return model_k
+    
+    
+    
+    def get_random_sample(self, xr, yr, fieldr, sample_size):
+        
+        ind = np.random.choice(len(xr),int(len(xr)*sample_size)) # Seecciona aleatoriamente el indice del 10% de los datos
+
+        x_sample = xr[ind]
+        y_sample = yr[ind]
+        field_sample = fieldr[ind]
+        
+        return x_sample, y_sample, field_sample
+    
+    def partition_geometry(self, limits, div_factor, step):
+        
+        cond_xs = []
+        cond_ys = []
+        cond_vals = []
+        gridxs = []
+        gridys = []
+        
+        xmax = limits[0]
+        ymax = limits[1]
+        xmin = limits[2]
+        ymin = limits[3]
+        
+        divs = ceil(sqrt(len(self.xr)/div_factor))
+        
+        print(f"partitioning geometry into {divs+divs} subdivitions...")
+        
+        x_len = (xmax - xmin) / divs
+        y_len = (ymax - ymin) / divs
+
+
+        for i in range(divs):
+          indx = np.argwhere((xmin+x_len*i) <= self.xr)
+          indx2 = np.argwhere(self.xr < (xmin+(x_len*(i+1))))
+          for j in range(divs):
+            indy = np.argwhere((ymin+y_len*j) <= self.yr)
+            indy2 = np.argwhere(self.yr < ymin+(y_len*(j+1)))
+            ind = indx[np.in1d(indx, indx2)]
+            ind = ind[np.in1d(ind, indy)]
+            ind = ind[np.in1d(ind, indy2)]
+            cond_xs.append(self.xr[ind])
+            cond_ys.append(self.yr[ind])
+            cond_vals.append(self.fieldr[ind])
+            gridxs.append(np.arange(xmin+x_len*i, xmin+(x_len*(i+1)), step))
+            gridys.append(np.arange(ymin+y_len*j, ymin+(y_len*(j+1)), step))
+            
+            
+        return cond_xs, cond_ys, cond_vals, gridxs, gridys
+    
+    def get_interpolation(self, cond_xs, cond_ys, cond_vals, gridxs, gridys, model_k):
+        
+        field_data = []
+        variance_field_data = []
+        x_data = [] 
+        y_data = []
+        print("Interpolating data...")
+        for i in range(len(cond_xs)):
+            print(f"interpolating partition {i+1}")
+            OK2 = gs.krige.Ordinary(model_k, [cond_xs[i], cond_ys[i]], cond_vals[i], exact=True)
+            OK2.structured([gridxs[i], gridys[i]])
+            
+            xx, yy = np.meshgrid(gridys[i], gridxs[i])
+            x_data.append(xx)
+            y_data.append(yy)
+            
+            z = OK2.field.copy()
+            w=OK2.krige_var.copy()
+            field_data.append(z)
+            variance_field_data.append(w)
+          
+        return x_data, y_data, field_data, variance_field_data
+          
+    def clip_subdivition(self, xx, yy, field_data, variance_field_data, specific_region_poligon_1, specific_region_poligon_2):
+        
+        
+        for i in range(np.shape(field_data)[0]):
+            for j in range(np.shape(field_data)[1]):
+                
+                point = Point(xx[i,j],yy[i,j])
+                
+                if not specific_region_poligon_1.contains(point)[0]:
+                    field_data[i, j] = np.nan
+                    variance_field_data[i, j] = np.nan
+                 
+                if not specific_region_poligon_2.contains(point)[0]:
+                    field_data[i, j] = np.nan
+                    variance_field_data[i, j] = np.nan
+                
+        return field_data, variance_field_data
+        
+    
+    
+    
+    

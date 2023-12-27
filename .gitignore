@@ -9,5 +9,9 @@
 *.shp
 *.xml
 *.shx
-
+*.csv
+*.tif
+*.pyc
+*.txt
+**/__pycache__/	
 

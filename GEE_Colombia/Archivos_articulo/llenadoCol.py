@@ -87,24 +87,25 @@ geometries_dict = {
 8: 'región caribe', 
 9: 'mar adentro zona norte'
 }
-g=4 # Valor dependiendo a la region especifica de colombia seleccionada del diccionario de arriba.
+
+g = 3 # Valor dependiendo a la region especifica de colombia seleccionada del diccionario de arriba.
 
 geometries = [] # Lista con las zonas de colombia como poligonos
 for i in coordinates:
     for j in i:
       geometries.append(ee.Geometry.Polygon(j)) # individualizo cada una de las regiones 
-      
-      
+   
+specificRegionPoly = geometries[g]
+
 """
 A continuación se leen los datos obtenidos del satelite en las fechas especificadas los cuales fueron pormediados
 para los años desde el 2019 hasta el 2023.
 """     
 r = np.loadtxt('2019-02-09_2023-05-05_prom.csv',skiprows=1, usecols=(1,2,3),delimiter=',') # se carga el archivo .csv
 
+statAnalisis = statAnalisisData(r) 
 
-speciicRegionPoly = geometries[g]
-satData = csv_from_sat(r)      
-xr, yr, fieldr = satData.getVal_in_sahpe(geometries[g]) # devuelve las coordenadas y el valor en dicho punto
+xr, yr, fieldr = statAnalisis.getVal_in_sahpe(geometries[g]) # devuelve las coordenadas y el valor en dicho punto
 
 
 """
@@ -112,27 +113,26 @@ A continuación se seleccionan el 10% de los datos de forma aleatoria
 y se almacenan en las variables x, y, field como np.arrays
 
 """
-ind = np.random.choice(len(xr),int(len(xr)*0.1)) # Seecciona aleatoriamente el indice del 10% de los datos
-xr = np.array(xr)
-yr = np.array(yr)
-fieldr = np.array(fieldr)
-x = xr[ind]
-y = yr[ind]
-field = fieldr[ind]
+
+x, y, field = statAnalisis.get_random_sample(xr, yr, fieldr, 0.1)
+
+
 
 
 """
 A continación se prueban diferentes modelos para los semivariogramas
 """
 
-statAnalisis = statAnalisisData(r)
+
 scores = statAnalisis.getVariogramScores(x, y, field)
+
 #----
 
 #--------
 
-
 model_k = statAnalisis.getBestVariogram()
+
+
 #----
 
 # Parecen haber dos tipos de modelos en el semivariograma por lo que se evalúa la suposición de isotropía
@@ -158,13 +158,14 @@ bin_center, dir_vario, counts = gs.vario_estimate(
 
 #---
 
-model = gs.SuperSpherical(dim=2, angles=angle)
+model = gs.Linear(dim=2, angles=angle)
 main_axes=model.main_axes()
 print("Original:")
 print(model)
 model.fit_variogram(bin_center, dir_vario)
 print("Fitted:")
 print(model)
+
 
 """
 RESULT:
@@ -192,177 +193,86 @@ plt.show()
 
 #---
 
-cor=speciicRegionPoly.getInfo()['coordinates'][0]
-xmax=cor[0][1]
-ymax=cor[0][0]
-xmin=cor[0][1]
-ymin=cor[0][0]
-for i in range(len(cor)):
-  xc=cor[i][1]
-  yc=cor[i][0]
-  #print(xc)
-  #print(x>xmax)
-  if xc>xmax:
-    xmax=xc
-  if yc>ymax:
-    ymax=yc
-  if xc<xmin:
-    xmin=xc
-  if yc<ymin:
-    ymin=yc
+xmax,ymax,xmin,ymin = methaneSat.get_region_limits(specificRegionPoly)
+limits = [xmax, ymax, xmin, ymin]
+
+print('The limits of the región are: ', xmax,ymax,xmin,ymin)
+
+# Paritición e interpolación
+
+cond_xs, cond_ys, cond_vals, gridxs, gridys = statAnalisis.partition_geometry(limits, 500, 0.005)
+    
+x_data, y_data, field_data, variance_field_data = statAnalisis.get_interpolation(cond_xs, cond_ys, cond_vals, gridxs, gridys, model_k)
 
 
-print(xmax,ymax,xmin,ymin)
-
-#------------------------------------------------------- codigo primo juli -----------
-
-cond_xs = []
-cond_ys = []
-cond_vals = []
-gridxs = []
-gridys = []
-divs = ceil(sqrt(len(xr)/200))
-x_len = (xmax - xmin) / divs
-y_len = (ymax - ymin) / divs
-for i in range(divs):
-  indx = np.argwhere((xmin+x_len*i)<=xr)
-  indx2 = np.argwhere(xr<(xmin+(x_len*(i+1))))
-  for j in range(divs):
-    indy = np.argwhere((ymin+y_len*j)<=yr)
-    indy2 = np.argwhere(yr<ymin+(y_len*(j+1)))
-    ind = indx[np.in1d(indx, indx2)]
-    ind = ind[np.in1d(ind, indy)]
-    ind = ind[np.in1d(ind, indy2)]
-    cond_xs.append(xr[ind])
-    cond_ys.append(yr[ind])
-    cond_vals.append(fieldr[ind])
-    gridxs.append(np.arange(xmin+x_len*i, xmin+(x_len*(i+1)), 0.005))
-    gridys.append(np.arange(ymin+y_len*j, ymin+(y_len*(j+1)), 0.005))
 
 
-# data = np.array([[0, 0, 0, 0]])
 
-# for i in range(len(cond_xs)):
-#   OK2 = gs.krige.Ordinary(model_k, [cond_xs[i], cond_ys[i]], cond_vals[i], exact=True)
-#   OK2.structured([gridxs[i], gridys[i]])
-#   #ax = OK2.plot()
-  
-#   xx, yy = np.meshgrid(gridys[i], gridxs[i])
-#   z = OK2.field.copy()
-#   w=OK2.krige_var.copy()
-#   #z=z.reshape(len(gridy),len(gridx))
-#   data_i = np.array([xx, yy, z, w]).reshape(4, -1).T
-#   data = np.concatenate((data, data_i), axis=0)
-  
-# data = np.delete(data, 0, 0)
-
-field_data = []
-variance_field_data = []
-x_data = [] 
-y_data = []
-for i in range(len(cond_xs)):
- 
-  OK2 = gs.krige.Ordinary(model_k, [cond_xs[i], cond_ys[i]], cond_vals[i], exact=True)
-  OK2.structured([gridxs[i], gridys[i]])
-  
-  xx, yy = np.meshgrid(gridys[i], gridxs[i])
-  x_data.append(xx)
-  y_data.append(yy)
-  
-  z = OK2.field.copy()
-  w=OK2.krige_var.copy()
-  field_data.append(z)
-  variance_field_data.append(w)
-  
+#--
+# Recorte del cuadrado en la zona correspondiente
 
 
-#print(data)
-# -------------------------------------------------------------------------------------
-#------
-#xx, yy = np.meshgrid(gridy, gridx)
-#z = OK2.field.copy()
-#w=OK2.krige_var.copy()
-#z=z.reshape(len(gridy),len(gridx))
-#data = np.array([xx, yy, z, w]).reshape(4, -1).T
+specific_region_poligon = Polygon(specificRegionPoly.getInfo()['coordinates'][0])
+specific_region_poligon = gpd.GeoSeries([specific_region_poligon])
 
+cor_col = fronterasMaritimasCol.getInfo()['features'][0]['geometry']['coordinates'][0]
+poly_col = Polygon( cor_col )
+col_polygon = gpd.GeoSeries([poly_col])
+
+#from shapely.geometry import Point
+#from shapely.geometry.polygon import Polygon
 
 
 
 # plt.figure(1)
 # fig, ax1 = plt.subplots(layout='constrained')
 
-# #myPoly.boundary.plot(edgecolor='red')
-# CS1=plt.contourf(xx, yy, w,100)
-# fig.colorbar(CS1)
-# ax1.set_title('Varianza en ' + geometries_dict[g])
-# ax1.set_xlabel('Longitud')
-# ax1.set_ylabel('Latitud')
-# plt.show()
-# plt.figure(2)
-
-# #myPoly.boundary.plot(edgecolor='red')
-# fig1, ax2 = plt.subplots(layout='constrained')
-# CS=ax2.contourf(xx, yy, z,100)
-# ax2.set_title('Valor en ' + geometries_dict[g])
-# ax2.set_xlabel('Longitud')
-# ax2.set_ylabel('Latitud')
-# fig1.colorbar(CS)
-# plt.show()
-
-#---
-
-cor_col=fronterasMaritimasCol.getInfo()['features'][0]['geometry']['coordinates'][0]
-#--
-# Recorte del cuadrado en la zona correspondiente
-
-
-speciicRegionPoly = Polygon( cor )
-myPoly = gpd.GeoSeries([speciicRegionPoly])
-
-poly_col = Polygon( cor_col )
-myPoly_col = gpd.GeoSeries([poly_col])
-
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-
-
-
-# for i in range(np.shape(data)[0]):
-  
-#     point = Point(xx[i,j],yy[i,j])
+# for z in range(len(field_data)):
+#     xx = x_data[z]
+#     yy = y_data[z]
     
-#     if not speciicRegionPoly.contains(point) and  not myPoly_col.contains(point):
-#         data[i, 2] = np.nan
-#         data[i, 3] = np.nan
-        
+    
+#     for i in range(np.shape(field_data[z])[0]):
+#         for j in range(np.shape(field_data[z])[1]):
+            
+#             point = Point(xx[i,j],yy[i,j])
+            
+#             if not specific_region_poligon.contains(point)[0]:
+#                 field_data[z][i, j] = np.nan
+#                 variance_field_data[z][i, j] = np.nan
+             
+#             if not col_polygon.contains(point)[0]:
+#                 field_data[z][i, j] = np.nan
+#                 variance_field_data[z][i, j] = np.nan
+            
+    
+    
+#     #myPoly.boundary.plot(edgecolor='red')
+#     CS1=plt.contourf(xx, yy, field_data[z], 100)
+
+#     print(f"geometria: {geometries_dict[g]}, partición: {z}") 
+    
+    
+# fig.colorbar(CS1)
+# ax1.set_title('Valor en zona' + geometries_dict[g])
+# ax1.set_xlabel('Longitud')
+# ax1.set_ylabel('Latitud')        
+# plt.show()
 
 plt.figure(1)
 fig, ax1 = plt.subplots(layout='constrained')
-
+#---------------------------------
 for z in range(len(field_data)):
     xx = x_data[z]
     yy = y_data[z]
+    field_data_i = field_data[z]
+    variance_field_data_i = variance_field_data[z]
     
+    field_data_div, variance_field_data_div = statAnalisis.clip_subdivition(xx, yy, field_data_i, variance_field_data_i, specific_region_poligon, col_polygon)
     
-    for i in range(np.shape(field_data[z])[0]):
-        for j in range(np.shape(field_data[z])[1]):
-            
-            point = Point(xx[i,j],yy[i,j])
-            
-            if not speciicRegionPoly.contains(point):
-                field_data[z][i, j] = np.nan
-                variance_field_data[z][i, j] = np.nan
-             
-            if not myPoly_col.contains(point)[0]:
-                field_data[z][i, j] = np.nan
-                variance_field_data[z][i, j] = np.nan
-            
-    
-    
-    #myPoly.boundary.plot(edgecolor='red')
     CS1=plt.contourf(xx, yy, field_data[z], 100)
 
-    print(z) 
+    print(f"geometria: {geometries_dict[g]}, partición: {z}") 
     
     
 fig.colorbar(CS1)
@@ -370,35 +280,40 @@ ax1.set_title('Valor en zona' + geometries_dict[g])
 ax1.set_xlabel('Longitud')
 ax1.set_ylabel('Latitud')        
 plt.show()
+
+
+
+
 input('doneeeeee')
+
 #df = pd.DataFrame(data,columns=['lon','lat','value','var'])
 #df = df[df['value'].notna()]
 #df.to_csv('prueba_medallo.csv', sep=',', encoding='utf-8', index=False)
 
 #---
 
-plt.figure(1)
-fig, ax1 = plt.subplots(layout='constrained')
+# plt.figure(1)
+# fig, ax1 = plt.subplots(layout='constrained')
 
-#myPoly.boundary.plot(edgecolor='red')
-CS1=plt.contourf(xx, yy, w,100)
-fig.colorbar(CS1)
-ax1.set_title('Varianza en zona' + geometries_dict[g])
-ax1.set_xlabel('Longitud')
-ax1.set_ylabel('Latitud')
-plt.savefig('varianza'+ geometries_dict[g] + '.png', dpi=600)
-plt.show()
+# #myPoly.boundary.plot(edgecolor='red')
+# CS1=plt.contourf(xx, yy, w,100)
+# fig.colorbar(CS1)
+# ax1.set_title('Varianza en zona' + geometries_dict[g])
+# ax1.set_xlabel('Longitud')
+# ax1.set_ylabel('Latitud')
+# plt.savefig('varianza'+ geometries_dict[g] + '.png', dpi=600)
+# plt.show()
 
-plt.figure(2)
+# plt.figure(2)
 
-#myPoly.boundary.plot(edgecolor='red')
-fig1, ax2 = plt.subplots(layout='constrained')
-CS=ax2.contourf(xx, yy, z,100)
-ax2.set_title('Valor en zona' + geometries_dict[g])
-ax2.set_xlabel('Longitud')
-ax2.set_ylabel('Latitud')
-fig1.colorbar(CS)
-plt.savefig('valor '+ geometries_dict[g] +'.png', dpi=600)
-plt.show()
+# #myPoly.boundary.plot(edgecolor='red')
+# fig1, ax2 = plt.subplots(layout='constrained')
+# CS=ax2.contourf(xx, yy, z,100)
+# ax2.set_title('Valor en zona' + geometries_dict[g])
+# ax2.set_xlabel('Longitud')
+# ax2.set_ylabel('Latitud')
+# fig1.colorbar(CS)
+# plt.savefig('valor '+ geometries_dict[g] +'.png', dpi=600)
+# plt.show()
 
 #---
